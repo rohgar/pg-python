@@ -12,18 +12,24 @@ from langchain.chains import LLMChain
 model = OllamaLLM(model="llama3.2", temperature=0.0)
 
 
-# 1. Create a prompt template from a prompt, that has the variables.
-#    These will be classified as input_variables by the model
-prompt = """Translate the text that is delimited by triple \
+# prompt templates are an abstraction to prompts that we can
+# re-use. It also helps to have the LLM provide output in
+# a defined fashion (ReAct) - covered in demo_02.
+
+# 1. Convert the prompt to a prompt template using variables for
+#    the user content and anything else.
+#    These varialbles will be inptut variables when we pass the
+#    prompt to the model.
+prompt_template_str = """Translate the text that is delimited by triple \
 backticks into a style that is {customer_style}.
 text: ```{customer_email}```
 """
-prompt_template = ChatPromptTemplate.from_template(prompt)
+prompt_template = ChatPromptTemplate.from_template(prompt_template_str)
 print(f"prompt_template = {prompt_template}")
 print(f"prompt_template type = {type(prompt_template)}\n")
 
 
-# 2. populate the variables defined above i.e. the input
+# 2. Gather the variable values defined above.
 style = """American English in a calm and respectful tone"""
 
 email_content = """Arrr, I be fuming that me blender lid \
@@ -33,12 +39,23 @@ cost of cleaning up me kitchen. I need yer help right \
 now, matey!
 """
 
-# 3. pass the variables to prompt and get the output
+print("------")
+print("input")
+print("------")
+
+print(f"customer_email = {email_content}")
+print(f"customer_style = {style}")
+
+# 3. Pass the variables to prompt and get the output
 chain = prompt_template | model
-response = chain.invoke({"customer_email": email_content, "customer_style": style})
+response_str = chain.invoke({"customer_email": email_content, "customer_style": style})
 # response = session.invoke({"country":country})
 # customer_response =  model(customer_messages)
-print(response)
+print("\n------")
+print("input")
+print("------")
+print(f"response_str ({type(response_str)}) = {response_str}")
+
 
 exit(0)
 
@@ -66,8 +83,8 @@ def get_completion_chatgpt_api(prompt, model=llm_model):
     )
     return response.choices[0].message["content"]
 
-response = get_completion_chatgpt_api(prompt)
-print(f"response = {response}")
+response_str = get_completion_chatgpt_api(prompt)
+print(f"response_str ({type(response_str)}) = {response_str}")
 
 # --------------------------------------------------------
 # Using LangChain (chatgpt)
