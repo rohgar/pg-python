@@ -46,6 +46,7 @@ from langchain_core.chat_history import (
 )
 from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain.schema import HumanMessage
+from langchain_core.messages import SystemMessage, trim_messages
 
 store = {}
 
@@ -59,7 +60,7 @@ with_message_history = RunnableWithMessageHistory(chain, get_session_history)
 
 config = {"configurable": {"session_id": "abc2a1"}}
 
-response = with_message_history.invoke(
+response = with_message_history.stream(
     prompt_template.format(topic="What is the capital of France?"),
     config=config,
 )
@@ -67,15 +68,24 @@ response = with_message_history.invoke(
 print(f"1) response {type(response)} = {response}")
 
 
-response = with_message_history.invoke(
+response = with_message_history.stream(
     prompt_template.format(topic="What is the language spoken there?"),
     config=config,
 )
 print(f"2) response {type(response)} = {response}")
 
 
-response = with_message_history.invoke(
+response = with_message_history.stream(
     prompt_template.format(topic="Can you name some popular attractions there?"),
     config=config,
 )
 print(f"3) response_str = {response}")
+
+trimmer = trim_messages(
+    max_tokens=65,
+    strategy="last",
+    token_counter=model,
+    include_system=True,
+    allow_partial=False,
+    start_on="human",
+)
