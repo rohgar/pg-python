@@ -7,8 +7,8 @@ model = OllamaLLM(model="llama3.2", temperature=0.0)
 
 
 prompt_template = ChatPromptTemplate([
-    ("system", "You are a helpful assistant"),
-    ("user", "Tell me a joke about {topic}")
+    ("system", "Can you answer this question: "),
+    ("user", "{topic}")
 ])
 
 prompt = prompt_template.invoke({"topic": "cats"})
@@ -23,16 +23,17 @@ chain = prompt_template | model
 # Using user input, we can use the `Human Message Object`
 # ------------------------------
 
-prompt_template = ChatPromptTemplate([
-    ("system", "You are a helpful assistant"),
-    ("user", "Tell me a joke about {topic}")
-])
-
 # the key should match the input variable defined chat prompt template
-prompt = prompt_template.invoke({"topic": [HumanMessage(content="dogs")]})
+prompt = prompt_template.invoke({"topic": [HumanMessage(content="What is the capital of France?")]})
 
 response_str = chain.invoke(prompt)
-print(f"response_str = {response_str}")
+print(f"response_str = {response_str}\n")
+
+prompt = prompt_template.invoke({"topic": [HumanMessage(content="What is its population?")]})
+
+response_str = chain.invoke(prompt)
+print(f"response_str explaination = {response_str}")
+print("------\n")
 
 
 # ------------------------------
@@ -56,11 +57,25 @@ def get_session_history(session_id: str) -> BaseChatMessageHistory:
 
 with_message_history = RunnableWithMessageHistory(chain, get_session_history)
 
-config = {"configurable": {"session_id": "abc2"}}
+config = {"configurable": {"session_id": "abc2a1"}}
 
 response = with_message_history.invoke(
-    prompt_template.format(topic="chicken"),
+    prompt_template.format(topic="What is the capital of France?"),
     config=config,
 )
 
-print(f"response_str = {response}")
+print(f"1) response {type(response)} = {response}")
+
+
+response = with_message_history.invoke(
+    prompt_template.format(topic="What is the language spoken there?"),
+    config=config,
+)
+print(f"2) response {type(response)} = {response}")
+
+
+response = with_message_history.invoke(
+    prompt_template.format(topic="Can you name some popular attractions there?"),
+    config=config,
+)
+print(f"3) response_str = {response}")
