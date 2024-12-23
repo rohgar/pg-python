@@ -1,4 +1,5 @@
-from langchain_ollama.llms import OllamaLLM
+# from langchain_ollama.llms import OllamaLLM
+from langchain_ollama import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.messages import HumanMessage, AIMessage
 
@@ -28,7 +29,7 @@ def process_input(user_text: str):
     output = app.invoke({"messages": input_messages}, config)
     return output["messages"][-1]
 
-model = OllamaLLM(model="llama3.2", temperature=0.2)
+model = ChatOllama(model="llama3.2", temperature=0.2)
 
 workflow = StateGraph(state_schema=MessagesState)
 workflow.add_edge(START, "model")  # Define the (single) node in the graph

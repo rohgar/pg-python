@@ -1,4 +1,5 @@
-from langchain_ollama.llms import OllamaLLM
+# from langchain_ollama.llms import OllamaLLM
+from langchain_ollama import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.messages import HumanMessage, AIMessage
 
@@ -8,7 +9,7 @@ from langgraph.graph import START, MessagesState, StateGraph
 
 from langchain_core.messages import HumanMessage
 
-model = OllamaLLM(model="llama3.2", temperature=0.2)
+model = ChatOllama(model="llama3.2", temperature=0.2)
 
 print(model.invoke([HumanMessage(content="What is the capital of France?")]))
 print(model.invoke([HumanMessage(content="What are some tourist attractions there?")]))

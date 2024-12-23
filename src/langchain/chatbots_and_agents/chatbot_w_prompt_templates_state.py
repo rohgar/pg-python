@@ -1,4 +1,5 @@
-from langchain_ollama.llms import OllamaLLM
+# from langchain_ollama.llms import OllamaLLM
+from langchain_ollama import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.messages import HumanMessage, AIMessage
 from typing import Sequence
@@ -9,6 +10,8 @@ from typing_extensions import Annotated, TypedDict
 from langchain_core.messages import BaseMessage
 from langgraph.graph.message import add_messages
 from langchain_core.messages import SystemMessage, trim_messages
+from PIL import Image
+import io
 
 
 # Since now we have user messages and the user specified language as input, we will define a
@@ -35,10 +38,10 @@ def call_model(state: State):
 
 def process_input(user_text: str, user_language: str):
     input_messages = [HumanMessage(user_text)]
-    output = app.invoke({"messages": input_messages, "language": user_language}, config)
+    output = graph.invoke({"messages": input_messages, "language": user_language}, config)
     return output["messages"][-1]
 
-model = OllamaLLM(model="llama3.2", temperature=0.2)
+model = ChatOllama(model="llama3.2", temperature=0.2)
 trimmer = trim_messages(
     max_tokens=500,
     strategy="last",
@@ -49,14 +52,26 @@ trimmer = trim_messages(
 )
 chain = trimmer | model
 
-workflow = StateGraph(state_schema=State)
-workflow.add_edge(START, "model")  # Define the (single) node in the graph
-workflow.add_node("model", call_model)
+graph_builder = StateGraph(state_schema=State)
+# where to start its work each time we run our graph. This is
+# edge because we start with an input to the node we will define
+graph_builder.add_edge(START, "model")
+# add the node
+graph_builder.add_node("model", call_model)
 
-app = workflow.compile(checkpointer=MemorySaver())  # Add memory
+# compile the graph
+graph = graph_builder.compile(checkpointer=MemorySaver())  # Add memory
+
+
+try:
+    img_data = graph.get_graph().draw_mermaid_png()
+    Image.open(io.BytesIO(img_data)).show()
+except Exception as e:
+    print('Could not display graph: ', repr(e))
+    # This requires some extra dependencies and is optional
+    pass
 
 config = {"configurable": {"thread_id": "abc123"}}
-
 
 print("Type 'exit|quit' to quit the application.\n")
 user_language = input("User (language): ")
