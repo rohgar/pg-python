@@ -8,6 +8,7 @@ from langgraph.graph import END, START, StateGraph
 from typing_extensions import TypedDict
 import asyncio
 
+
 llm = ChatOllama(model="llama3.2", temperature=0.9)
 
 # Define the prompts we will route to
@@ -23,12 +24,19 @@ prompt_2 = ChatPromptTemplate.from_messages(
         ("human", "{input}"),
     ]
 )
+prompt_3 = ChatPromptTemplate.from_messages(
+    [
+        ("system", "You are an expert on physics."),
+        ("human", "{input}"),
+    ]
+)
 
 # Construct the chains we will route to. These format the input query
 # into the respective prompt, run it through a chat model, and cast
 # the result to a string.
 chain_1 = prompt_1 | llm | StrOutputParser()
 chain_2 = prompt_2 | llm | StrOutputParser()
+chain_3 = prompt_3 | llm | StrOutputParser()
 
 
 # Next: define the chain that selects which branch to route to.
@@ -46,8 +54,7 @@ route_prompt = ChatPromptTemplate.from_messages(
 # Define schema for output:
 class RouteQuery(TypedDict):
     """Route query to destination expert."""
-
-    destination: Literal["animal", "vegetable"]
+    destination: Literal["animal", "vegetable", "physics"]
 
 
 route_chain = route_prompt | llm.with_structured_output(RouteQuery)
@@ -76,12 +83,18 @@ async def prompt_2(state: State, config: RunnableConfig):
     return {"answer": await chain_2.ainvoke(state["query"], config)}
 
 
+async def prompt_3(state: State, config: RunnableConfig):
+    return {"answer": await chain_3.ainvoke(state["query"], config)}
+
+
 # We then define logic that selects the prompt based on the classification
-def select_node(state: State) -> Literal["prompt_1", "prompt_2"]:
+def select_node(state: State) -> Literal["prompt_1", "prompt_2", "prompt_3"]:
     if state["destination"] == "animal":
         return "prompt_1"
-    else:
+    elif state["destination"] == "vegetable":
         return "prompt_2"
+    else:
+        return "prompt_3"
 
 
 # Finally, assemble the multi-prompt chain. This is a sequence of two steps:
@@ -93,12 +106,24 @@ graph_builder = StateGraph(State)
 graph_builder.add_node("route_query", route_query)
 graph_builder.add_node("prompt_1", prompt_1)
 graph_builder.add_node("prompt_2", prompt_2)
+graph_builder.add_node("prompt_3", prompt_3)
 
 graph_builder.add_edge(START, "route_query")
 graph_builder.add_conditional_edges("route_query", select_node)
 graph_builder.add_edge("prompt_1", END)
 graph_builder.add_edge("prompt_2", END)
+graph_builder.add_edge("prompt_3", END)
 graph = graph_builder.compile()
+
+display_graph = False
+if display_graph:
+    try:
+        from PIL import Image
+        import io
+        img_data = graph.get_graph().draw_mermaid_png()
+        Image.open(io.BytesIO(img_data)).show()
+    except Exception as e:
+        print('Could not display graph: ', repr(e))
 
 
 async def run_chat(graph, config):
