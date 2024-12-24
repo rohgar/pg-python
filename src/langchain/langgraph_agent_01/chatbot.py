@@ -4,16 +4,6 @@ from my_graph import MyGraph
 from my_tools import MyTools
 
 
-# def process_input(user_text: str, user_language: str):
-#     input_messages = [HumanMessage(user_text)]
-#     state = {
-#         "messages": input_messages,
-#         "language": user_language
-#     }
-#     output = my_graph.graph.invoke(state, config)
-#     return output["messages"][-1]
-
-
 mt = MyTools()
 mg = MyGraph(my_tools=mt)
 # mg.display_graph()

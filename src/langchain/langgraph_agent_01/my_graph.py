@@ -3,7 +3,6 @@ from langgraph.graph import START, END, StateGraph
 from PIL import Image
 import io
 from my_basic_tool_node import MyBasicToolNode
-from my_chain import MyChain
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from typing_extensions import Annotated, TypedDict
 from typing import Sequence
@@ -19,28 +18,12 @@ from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 
 
 MODEL = ChatOllama(model="llama3.2", temperature=0.2)
-MEMORY_TRIMMER = trim_messages(
-            max_tokens=500,
-            strategy="last",
-            token_counter=MODEL,
-            include_system=True,
-            allow_partial=False,
-            start_on="human",
-        )
 
-PROMPT_TEMPLATE = ChatPromptTemplate.from_messages(
-            [
-                (
-                    "system", "Answer all questions to the best of your ability in {language}.",
-                ),
-                MessagesPlaceholder(variable_name="messages"),
-            ]
-        )
 
 # represents user inputs/preferences
 class State(TypedDict):
     messages: Annotated[Sequence[BaseMessage], add_messages]
-    language: str
+
 
 class MyGraph:
 

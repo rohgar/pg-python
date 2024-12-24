@@ -1,6 +1,8 @@
 from langchain_ollama import ChatOllama
 from langchain_core.messages import trim_messages
+from langgraph.prebuilt import create_react_agent
 from my_tools import MyTools
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 
 
 class MyChain:
@@ -19,3 +21,5 @@ class MyChain:
 
         self.model.bind_tools(my_tools.tools)
         self.chain = memory_trimmer | self.model
+
+
