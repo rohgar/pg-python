@@ -1,7 +1,3 @@
-from langchain_community.tools.tavily_search import TavilySearchResults
-from langchain_community.tools.ddg_search.tool import DuckDuckGoSearchRun
-from langchain_community.utilities.wikipedia import WikipediaAPIWrapper
-from langchain.agents import Tool
 from langchain_core.messages import BaseMessage
 from langchain_core.messages import trim_messages
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
@@ -16,27 +12,9 @@ from PIL import Image
 from typing import Sequence
 from typing_extensions import Annotated, TypedDict
 import io
-import os
-
-wikipedia_tool = Tool(
-    name="wikipedia",
-    func=WikipediaAPIWrapper().run,
-    description="Useful for when you need to look up the songwriters, genre, \
-                and producers for a song on wikipedia",
-)
-
-duckduckgo_tool = Tool(
-    name="DuckDuckGo_Search",
-    func=DuckDuckGoSearchRun().run,
-    description="Useful for when you need to do a search on the internet to find \
-                information that the other tools can't find.",
-)
-
-
-# create an agent that uses Tavily api to search the internet
-# for the user's query.
-if not os.getenv('TAVILY_API_KEY'):
-    raise Exception("'TAVILY_API_KEY' is not set")
+import sys
+sys.path.append("..")
+from my_tools import wikipedia_tool, duckduckgo_tool
 
 MODEL = ChatOllama(model="llama3.2", temperature=0.2)
 
@@ -70,12 +48,7 @@ class MyGraph:
         )
 
         # tools
-        # inbuilt_tools = load_tools([]
-        tools = [
-            wikipedia_tool,
-            duckduckgo_tool,
-            # TavilySearchResults(max_results=1)
-        ]
+        tools = [ wikipedia_tool, duckduckgo_tool ]
 
         # add tool node:
         graph_builder.add_edge("f_tools", "call_model")

@@ -1,4 +1,3 @@
-from langchain_community.tools.tavily_search import TavilySearchResults
 from langchain_core.messages import AIMessage, ToolMessage
 from langchain_core.messages import BaseMessage
 from langchain_core.messages import trim_messages
@@ -14,7 +13,9 @@ from pydantic import BaseModel
 from typing import Sequence
 from typing_extensions import Annotated, TypedDict
 import io
-
+import sys
+sys.path.append("..")
+from my_tools import wikipedia_tool, duckduckgo_tool
 
 class RequestAssistance(BaseModel):
     """Escalate the conversation to an expert. Use this if you are unable to assist directly or if the user requires support beyond your permissions.
@@ -55,7 +56,7 @@ def my_human_node(state: State):
 
 
 MODEL = ChatOllama(model="llama3.2", temperature=0.2)
-tools = [TavilySearchResults(max_results=1)]
+tools = [wikipedia_tool, duckduckgo_tool]
 MODEL_WITH_TOOLS = MODEL.bind_tools(tools + [RequestAssistance])
 
 class MyGraph:
