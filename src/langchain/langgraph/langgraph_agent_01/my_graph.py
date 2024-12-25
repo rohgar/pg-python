@@ -14,7 +14,7 @@ from typing_extensions import Annotated, TypedDict
 import io
 import sys
 sys.path.append("..")
-from my_tools import wikipedia_tool, duckduckgo_tool
+from my_tools import get_tools
 
 MODEL = ChatOllama(model="llama3.2", temperature=0.2)
 
@@ -48,7 +48,7 @@ class MyGraph:
         )
 
         # tools
-        tools = [ wikipedia_tool, duckduckgo_tool ]
+        tools = get_tools()
 
         # add tool node:
         graph_builder.add_edge("f_tools", "call_model")
