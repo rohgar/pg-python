@@ -15,7 +15,7 @@ from typing_extensions import Annotated, TypedDict
 import io
 import sys
 sys.path.append("..")
-from my_tools import wikipedia_tool, duckduckgo_tool
+from my_tools import get_tools
 
 class RequestAssistance(BaseModel):
     """Escalate the conversation to an expert. Use this if you are unable to assist directly or if the user requires support beyond your permissions.
@@ -55,8 +55,8 @@ def my_human_node(state: State):
     }
 
 
+tools = get_tools()
 MODEL = ChatOllama(model="llama3.2", temperature=0.2)
-tools = [wikipedia_tool, duckduckgo_tool]
 MODEL_WITH_TOOLS = MODEL.bind_tools(tools + [RequestAssistance])
 
 class MyGraph:
@@ -74,8 +74,9 @@ class MyGraph:
         # it is fine directly responding. This conditional routing defines the main agent loop.
 
         # add tool node:
-        graph_builder.add_edge("f_tools", "call_model")
-        graph_builder.add_node("f_tools", ToolNode(tools))
+        graph_builder.add_node("tool_node", ToolNode(tools))
+        graph_builder.add_edge("tool_node", "call_model")
+
         graph_builder.add_node("human", my_human_node)
         graph_builder.add_edge("human", "call_model")
 
@@ -87,7 +88,7 @@ class MyGraph:
             # want to use a node named something else apart from "tools",
             # You can update the value of the dictionary to something else
             # e.g., "tools": "my_tools"
-            {"ftools": "f_tools", END: END},
+            {"tool_node": "tool_node", END: END},
         )
 
         graph_builder.add_conditional_edges(
@@ -137,7 +138,7 @@ class MyGraph:
 
         print(f"ai_message = {ai_message}")
         if hasattr(ai_message, "tool_calls") and len(ai_message.tool_calls) > 0:
-            return "ftools"
+            return "tool_node"
         return END
 
     def call_model(self, state: State, config: dict):
