@@ -2,10 +2,16 @@ README
 
 1. Pip installs:
 ```bash
-pip3 install openai python-dotenv pyre-check langchain langchain-ollama llama_index
-pip3 install langchain_community
+# misc
+python-dotenv pyre-check
+# langchain
+pip3 install openai langchain langchain-ollama llama_index langchain_community
+# for tools
 pip3 install langgraph tavily-python langgraph-checkpoint-sqlite
+# for displaying graph
 pip3 instal IPython
+# for reading vector stores
+pip3 install langchain-huggingface sentence-transformers tf-keras
 ```
 
 2. Download Ollama
