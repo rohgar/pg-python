@@ -16,17 +16,17 @@ embedding_model = HuggingFaceEmbeddings(model_name="sentence-transformers/all-Mi
 
 loader = CSVLoader(file_path='./resources/OutdoorClothingCatalog_1000.csv')
 document = loader.load()
-db = DocArrayInMemorySearch.from_documents(
+vectorstore = DocArrayInMemorySearch.from_documents(
     document,
     embedding_model
 )
 
 query = "Please suggest a shirt with sunblocking"
-docs = db.similarity_search(query)
+docs = vectorstore.similarity_search(query)
 print(f"docs = {docs}")
 print("---------------------------")
 
-retriever = db.as_retriever()
+retriever = vectorstore.as_retriever()
 qdocs = "".join([docs[i].page_content for i in range(len(docs))])
 
 response = llm.call_as_llm(f"{qdocs} Question: Please list all your \

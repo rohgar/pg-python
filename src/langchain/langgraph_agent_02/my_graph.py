@@ -3,7 +3,6 @@ from langchain_core.messages import AIMessage, ToolMessage
 from langchain_core.messages import BaseMessage
 from langchain_core.messages import trim_messages
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_ollama import ChatOllama
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import START, END, StateGraph
