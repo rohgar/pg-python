@@ -1,21 +1,42 @@
+from langchain_community.tools.tavily_search import TavilySearchResults
+from langchain_community.tools.ddg_search.tool import DuckDuckGoSearchRun
+from langchain_community.utilities.wikipedia import WikipediaAPIWrapper
+from langchain.agents import Tool
+from langchain_core.messages import BaseMessage
+from langchain_core.messages import trim_messages
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_ollama import ChatOllama
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import START, END, StateGraph
-from PIL import Image
-import io
-from my_basic_tool_node import MyBasicToolNode
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from typing_extensions import Annotated, TypedDict
-from typing import Sequence
-from langchain_core.messages import BaseMessage
 from langgraph.graph.message import add_messages
-from my_tools import MyTools
-
-
-from langchain_ollama import ChatOllama
-from langchain_core.messages import trim_messages
 from langgraph.prebuilt import create_react_agent
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from my_basic_tool_node import MyBasicToolNode
+from PIL import Image
+from typing import Sequence
+from typing_extensions import Annotated, TypedDict
+import io
+import os
 
+wikipedia_tool = Tool(
+    name="wikipedia",
+    func=WikipediaAPIWrapper().run,
+    description="Useful for when you need to look up the songwriters, genre, \
+                and producers for a song on wikipedia",
+)
+
+duckduckgo_tool = Tool(
+    name="DuckDuckGo_Search",
+    func=DuckDuckGoSearchRun().run,
+    description="Useful for when you need to do a search on the internet to find \
+                information that the other tools can't find.",
+)
+
+
+# create an agent that uses Tavily api to search the internet
+# for the user's query.
+if not os.getenv('TAVILY_API_KEY'):
+    raise Exception("'TAVILY_API_KEY' is not set")
 
 MODEL = ChatOllama(model="llama3.2", temperature=0.2)
 
@@ -27,7 +48,7 @@ class State(TypedDict):
 
 class MyGraph:
 
-    def __init__(self, my_tools: MyTools):
+    def __init__(self):
         graph_builder = StateGraph(state_schema=State)
 
         # where to start its work each time we run our graph. This is
@@ -45,19 +66,26 @@ class MyGraph:
             # It defaults to the identity function, but if you
             # want to use a node named something else apart from "tools",
             # You can update the value of the dictionary to something else
-            # e.g., "tools": "my_tools"
             {"ftools": "f_tools", END: END},
         )
 
+        # tools
+        # inbuilt_tools = load_tools([]
+        tools = [
+            wikipedia_tool,
+            duckduckgo_tool,
+            # TavilySearchResults(max_results=1)
+        ]
+
         # add tool node:
         graph_builder.add_edge("f_tools", "call_model")
-        graph_builder.add_node("f_tools", MyBasicToolNode(my_tools.tools))
+        graph_builder.add_node("f_tools", MyBasicToolNode(tools))
 
         # add output:
-        # graph_builder.add_edge("call_model", END)
+        graph_builder.add_edge("call_model", END)
 
         # self.model_w_tools = MODEL
-        self.model_w_tools = MODEL.bind_tools(my_tools.tools)
+        self.model_w_tools = MODEL.bind_tools(tools)
         self.graph = graph_builder.compile(checkpointer=MemorySaver())  # Add memory
 
 

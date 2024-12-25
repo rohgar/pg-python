@@ -1,11 +1,9 @@
 from langchain_core.messages import HumanMessage
 import os
 from my_graph import MyGraph
-from my_tools import MyTools
 
 
-mt = MyTools()
-mg = MyGraph(my_tools=mt)
+mg = MyGraph()
 # mg.display_graph()
 
 print("\nType 'exit | quit' to quit the application.\n")

@@ -3,13 +3,13 @@ README
 1. Pip installs:
 ```bash
 # misc
-python-dotenv pyre-check
+pip3 install python-dotenv pyre-check
 # langchain
 pip3 install openai langchain langchain-ollama llama_index langchain_community
 # for tools
-pip3 install langgraph tavily-python langgraph-checkpoint-sqlite
+pip3 install langgraph tavily-python langgraph-checkpoint-sqlite wikipedia duckduckgo-search
 # for displaying graph
-pip3 instal IPython
+pip3 install IPython docarray
 # for reading vector stores
 pip3 install langchain-huggingface sentence-transformers tf-keras
 ```
