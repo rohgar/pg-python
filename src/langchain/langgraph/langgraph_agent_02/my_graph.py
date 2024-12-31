@@ -25,6 +25,10 @@ class RequestAssistance(BaseModel):
 
 
 # represents user inputs/preferences
+# Note that attribute `messages` is annotated with `add_messages`, meaning
+# new messages when the state is updated, will be added. However, attribute
+# ask_human is not annotated, so it will be updated when/if the state for
+# an intermediate step is edited.
 class State(TypedDict):
     messages: Annotated[Sequence[BaseMessage], add_messages]
     ask_human: bool
