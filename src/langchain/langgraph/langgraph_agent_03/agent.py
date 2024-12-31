@@ -76,7 +76,6 @@ class Agent:
         graph_builder.set_entry_point("llm")
         self.graph = graph_builder.compile(
             checkpointer=checkpointer,
-            interrupt_before=["action"]
         )
 
         # create a dict of the toolname to the tool
@@ -111,14 +110,11 @@ class Agent:
         tool_calls = state['messages'][-1].tool_calls
         results = []
         for t in tool_calls:
-            print(f"Calling: {t}")
-            if not t['name'] in self.tools:      # check for bad tool name from LLM
-                print("\n ERROR: ....bad tool name....")
-                result = "bad tool name, retry"  # instruct LLM to retry if bad
-            else:
-                result = self.tools[t['name']].invoke(t['args'])
+            tool_name = t['name']
+            tool = self.tools[tool_name]
+            result = tool.invoke(t['args'])
             results.append(ToolMessage(tool_call_id=t['id'], name=t['name'], content=str(result)))
-        print("Back to the model!")
+        # print("Back to the model!")
         return {'messages': results}
 
     def display_graph(self):

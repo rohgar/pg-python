@@ -1,3 +1,7 @@
+import warnings
+# duckduckgo-search latest package warning: UserWarning: 'api' backend is deprecated, using backend='auto'
+warnings.filterwarnings('ignore', message="'api' backend is deprecated")
+
 from langchain_core.messages import HumanMessage
 from agent import Agent
 from langchain_ollama import ChatOllama
@@ -8,10 +12,13 @@ sys.path.append("..")
 from my_tools import get_tools
 
 
+# Reference: https://learn.deeplearning.ai/courses/ai-agents-in-langgraph/lesson/3/langgraph-components
+
 prompt = """You are a smart research assistant. Use the available tools to look up information. \
 You are allowed to make multiple calls (either together or in sequence). \
 Only look up information when you are sure of what you want. \
 If you need to look up some information before asking a follow up question, you are allowed to do that!
+Give concise answers.
 """
 
 tools = get_tools()
@@ -34,7 +41,7 @@ def ask_query(query: str):
 
 # result is type: langgraph.pregel.io.AddableValuesDict
 def print_result(result):
-    print(f"result = {result['messages'][-1]}\n---\n")
+    print(f"result = {result['messages'][-1].content}\n---\n")
 
 
 with SqliteSaver.from_conn_string(":memory:") as memory:
@@ -43,7 +50,6 @@ with SqliteSaver.from_conn_string(":memory:") as memory:
 
     query = "Whats the weather in SF?"
     ask_query(query)
-    exit(0)
 
     query = "What is the weather in SF and LA?"
     ask_query(query)
