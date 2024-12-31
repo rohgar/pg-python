@@ -5,14 +5,35 @@ warnings.filterwarnings('ignore', message="'api' backend is deprecated")
 from langchain_core.messages import HumanMessage
 from agent import Agent
 from langchain_ollama import ChatOllama
+
+# we will use sqllite to save state
 from langgraph.checkpoint.sqlite import SqliteSaver
 
 import sys
 sys.path.append("..")
 from my_tools import get_tools
 
-
 # Reference: https://learn.deeplearning.ai/courses/ai-agents-in-langgraph/lesson/3/langgraph-components
+
+
+def ask_query(query: str, stream_result=False):
+    messages = [HumanMessage(content=query)]
+
+    # stream_result will return all the intermediate step results as opposed to the final
+    # result. Eg. It will return an AIMessage from the LLM, then ToolMessage from the tool
+    # and then an AIMessage which has the final result. Hence the stream is printed in
+    # a for loop
+    if stream_result:
+        for event in agent.graph.stream({"messages": messages}, thread):
+            for v in event.values():
+                print(v['messages'])
+        print("\n")
+    else:
+        # result is type: langgraph.pregel.io.AddableValuesDict
+        result = agent.graph.invoke({"messages": messages}, thread)
+        print(f"result = {result['messages'][-1]}\n")
+    print("---\n")
+
 
 prompt = """You are a smart research assistant. Use the available tools to look up information. \
 You are allowed to make multiple calls (either together or in sequence). \
@@ -24,36 +45,25 @@ Give concise answers.
 tools = get_tools()
 model = ChatOllama(model="llama3.2", temperature=0.2)
 
-# session
+# session - this will allow us to have multiple conversations with different
+# user simultaneously
 thread = {"configurable": {"thread_id": "2"}}
 
+if __name__ == "__main__":
+    # we use an in-memory SQLite database for our checkpoints
+    with SqliteSaver.from_conn_string(":memory:") as memory:
+        agent = Agent(model, tools, system_msg_prompt=prompt, checkpointer=memory)
+        # agent.display_graph()
 
-def ask_query(query: str):
-    messages = [HumanMessage(content=query)]
+        query = "Whats the weather in SF?"
+        ask_query(query, True)
 
-    # for event in agent.graph.stream({"messages": messages}, thread):
-    #     for v in event.values():
-    #         print(v)
+        query = "How about in LA?"
+        ask_query(query)
 
-    result = agent.graph.invoke({"messages": messages}, thread)
-    print_result(result)
+        query = "Which one of those is warmer?"
+        ask_query(query)
 
-
-# result is type: langgraph.pregel.io.AddableValuesDict
-def print_result(result):
-    print(f"result = {result['messages'][-1].content}\n---\n")
-
-
-with SqliteSaver.from_conn_string(":memory:") as memory:
-    agent = Agent(model, tools, system_msg_prompt=prompt, checkpointer=memory)
-    # agent.display_graph()
-
-    query = "Whats the weather in SF?"
-    ask_query(query)
-
-    query = "What is the weather in SF and LA?"
-    ask_query(query)
-
-    query = "Who won the super bowl in 2024? In what state is the winning team headquarters located? \
-    What is the GDP of that state? Answer each question."
-    ask_query(query)
+        query = "Who won the super bowl in 2024? In what state is the winning team headquarters located? \
+        What is the GDP of that state? Answer each question."
+        ask_query(query)
