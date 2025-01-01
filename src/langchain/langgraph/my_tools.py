@@ -37,10 +37,9 @@ my_datetime_tool = Tool(
 
 python_repl_tool = PythonREPLTool()
 
-def get_tavily_search_tool(max_results=1):
-    if not os.getenv('TAVILY_API_KEY'):
-        raise Exception("'TAVILY_API_KEY' is not set")
-    return TavilySearchResults(max_results=max_results)
-
-def get_tools():
+def get_tools(include_tavily=False):
+    if include_tavily:
+        if not os.getenv('TAVILY_API_KEY'):
+            raise Exception("'TAVILY_API_KEY' is not set")
+        return [my_datetime_tool, wikipedia_tool, TavilySearchResults(max_results=1), python_repl_tool]
     return [my_datetime_tool, wikipedia_tool, duckduckgo_tool, python_repl_tool]

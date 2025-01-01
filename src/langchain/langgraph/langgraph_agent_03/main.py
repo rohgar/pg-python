@@ -17,20 +17,23 @@ from my_tools import get_tools
 
 
 def ask_query(query: str, stream_result=False):
-    messages = [HumanMessage(content=query)]
+    # Take the query and create an input for the llm that confirms to the AgentState
+    input_dict = None
+    if query:
+        input_dict = {"messages": [HumanMessage(content=query)]}
 
     # stream_result will return all the intermediate step results as opposed to the final
     # result. Eg. It will return an AIMessage from the LLM, then ToolMessage from the tool
     # and then an AIMessage which has the final result. Hence the stream is printed in
     # a for loop
     if stream_result:
-        for event in agent.graph.stream({"messages": messages}, thread):
+        for event in agent.graph.stream(input_dict, thread):
             for v in event.values():
                 print(v['messages'])
         print("\n")
     else:
         # result is type: langgraph.pregel.io.AddableValuesDict
-        result = agent.graph.invoke({"messages": messages}, thread)
+        result = agent.graph.invoke(input_dict, thread)
         print(f"result = {result['messages'][-1]}\n")
     print("---\n")
 

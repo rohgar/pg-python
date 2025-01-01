@@ -2,18 +2,24 @@ import warnings
 # duckduckgo-search latest package warning: UserWarning: 'api' backend is deprecated, using backend='auto'
 warnings.filterwarnings('ignore', message="'api' backend is deprecated")
 
-from langchain_core.messages import HumanMessage
+# ---------------------------------------------------------------------------------
+# In main.py, we streamed events in the result i.e. all intermediate step results.
+# We can also stream tokens. For this we need an async checkpointer.
+# The token events are of type `on_chat_model_stream`
+# Currently this code does not work as ChatOllama does not support token streaming
+# Known issues: https://github.com/langchain-ai/langchain/issues/26971
+# ---------------------------------------------------------------------------------
+
 from agent import Agent
+from langchain_core.messages import HumanMessage
 from langchain_ollama import ChatOllama
+from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
+import asyncio
 
 import sys
 sys.path.append("..")
 from my_tools import get_tools
 
-# In main.py, we streamed events in the result i.e. all intermediate step results. We can also stream
-# tokens. For this we need an async checkpointer. The token events are of type `on_chat_model_stream`
-import asyncio
-from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
 
 prompt = """You are a smart research assistant. Use the available tools to look up information. \
 You are allowed to make multiple calls (either together or in sequence). \
@@ -46,8 +52,6 @@ async def use_token_stream():
                     # that the model is asking for a tool to be invoked.
                     # So we only print non-empty content
                     print(content, end="|")
-                else:
-                    print('Empty Content')
 
 if __name__ == "__main__":
     asyncio.run(use_token_stream())
